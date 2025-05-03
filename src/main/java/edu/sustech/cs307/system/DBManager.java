@@ -7,12 +7,14 @@ import edu.sustech.cs307.meta.MetaManager;
 import edu.sustech.cs307.meta.TableMeta;
 import edu.sustech.cs307.storage.BufferPool;
 import edu.sustech.cs307.storage.DiskManager;
+import edu.sustech.cs307.value.ValueType;
 import org.apache.commons.lang3.StringUtils;
 import org.pmw.tinylog.Logger;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Set;
 
 public class DBManager {
     private final MetaManager metaManager;
@@ -57,18 +59,55 @@ public class DBManager {
      * Each table name is displayed in a separate row within the ASCII borders.
      */
     public void showTables() {
-        throw new RuntimeException("Not implement");
-        //todo: complete show table
-        // | -- TABLE -- |
-        // | -- ${table} -- |
-        // | ----------- |
+        Set<String> names = metaManager.getTableNames();
+        int maxLength = "Tables".length();
+        for (String name : names) {
+            maxLength = Math.max(maxLength, name.length());
+        }
+        String horizontal = "-".repeat(maxLength + 4);
+        horizontal = "|" + horizontal + "|";
+        Logger.info(horizontal);
+        Logger.info(center("tabels", maxLength));
+        Logger.info(horizontal);
+        for (String name : names){
+            Logger.info(center(name, maxLength));
+            Logger.info(horizontal);
+        }
+
+    }
+    private String center(String name, int width){
+        int padding = width - name.length();
+        int front = (padding)/2 + 2;
+        int end = padding - front + 4;
+        return "|" + " ".repeat(front) + name + " ".repeat(end) + "|";
     }
 
-    public void descTable(String table_name) {
-        throw new RuntimeException("Not implemented yet");
-        //todo: complete describe table
-        // | -- TABLE Field -- | -- Column Type --|
-        // | --  ${table field} --| -- ${table type} --|
+    public void descTable(String table_name) throws DBException {
+        TableMeta tableMeta = metaManager.getTable(table_name);
+        int column1 = "Field".length();
+        int column2 = "Type".length();
+        for (int i = 0; i < tableMeta.columnCount(); i++) {
+            ColumnMeta column = tableMeta.columns_list.get(i);
+            String name = column.name;
+            String type = column.type.toString();
+            column1 = Math.max(column1, name.length());
+            column2 = Math.max(column2, type.length());
+        }
+        String horizontal = "-".repeat(4 + column1 + 1 + column2 + 4);
+        horizontal = "|" + horizontal + "|";
+        String content = center("Field", column1);
+        content = content.substring(0,content.length() - 1) + center("Type", column2);
+        Logger.info(horizontal);
+        Logger.info(content);
+        for (int i = 0; i < tableMeta.columnCount(); i++) {
+            ColumnMeta column = tableMeta.columns_list.get(i);
+            String name = column.name;
+            String type = column.type.toString();
+            content = center(name, column1);
+            content = content.substring(0,content.length() - 1) + center(type, column2);
+            Logger.info(content);
+        }
+        Logger.info(horizontal);
     }
 
     /**

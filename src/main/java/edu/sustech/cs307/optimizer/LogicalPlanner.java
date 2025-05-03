@@ -2,13 +2,16 @@ package edu.sustech.cs307.optimizer;
 
 import java.io.StringReader;
 
+import edu.sustech.cs307.logicalOperator.dml.*;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.parser.JSqlParser;
+import net.sf.jsqlparser.statement.DescribeStatement;
 import net.sf.jsqlparser.statement.ExplainStatement;
 import net.sf.jsqlparser.statement.ShowStatement;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.*;
+import net.sf.jsqlparser.statement.show.ShowTablesStatement;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.delete.Delete;
@@ -17,9 +20,6 @@ import net.sf.jsqlparser.statement.create.table.CreateTable;
 import edu.sustech.cs307.exception.ExceptionTypes;
 import edu.sustech.cs307.logicalOperator.*;
 import edu.sustech.cs307.system.DBManager;
-import edu.sustech.cs307.logicalOperator.dml.CreateTableExecutor;
-import edu.sustech.cs307.logicalOperator.dml.ExplainExecutor;
-import edu.sustech.cs307.logicalOperator.dml.ShowDatabaseExecutor;
 import edu.sustech.cs307.exception.DBException;
 
 public class LogicalPlanner {
@@ -53,6 +53,16 @@ public class LogicalPlanner {
         } else if (stmt instanceof ShowStatement showStatement) {
             ShowDatabaseExecutor showDatabaseExecutor = new ShowDatabaseExecutor(showStatement);
             showDatabaseExecutor.execute();
+            return null;
+        } else if (stmt instanceof ShowTablesStatement showTablesStatement) {
+            ShowTablesExecutor showTablesExecutor = new ShowTablesExecutor(dbManager);
+            showTablesExecutor.execute();
+            return null;
+        } else if (stmt instanceof DescribeStatement describeStatement){
+            DescribeStatement describeStmt = (DescribeStatement) stmt;
+            String name = describeStmt.getTable().getName();
+            DescribeExecutor describeExecutor = new DescribeExecutor(dbManager,name);
+            describeExecutor.execute();
             return null;
         } else {
             throw new DBException(ExceptionTypes.UnsupportedCommand((stmt.toString())));
