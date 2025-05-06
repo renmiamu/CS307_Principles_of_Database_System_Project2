@@ -10,6 +10,7 @@ import net.sf.jsqlparser.statement.DescribeStatement;
 import net.sf.jsqlparser.statement.ExplainStatement;
 import net.sf.jsqlparser.statement.ShowStatement;
 import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.drop.Drop;
 import net.sf.jsqlparser.statement.select.*;
 import net.sf.jsqlparser.statement.show.ShowTablesStatement;
 import net.sf.jsqlparser.statement.update.Update;
@@ -58,11 +59,17 @@ public class LogicalPlanner {
             ShowTablesExecutor showTablesExecutor = new ShowTablesExecutor(dbManager);
             showTablesExecutor.execute();
             return null;
-        } else if (stmt instanceof DescribeStatement describeStatement){
+        } else if (stmt instanceof DescribeStatement describeStatement) {
             DescribeStatement describeStmt = (DescribeStatement) stmt;
             String name = describeStmt.getTable().getName();
             DescribeExecutor describeExecutor = new DescribeExecutor(dbManager,name);
             describeExecutor.execute();
+            return null;
+        } else if (stmt instanceof Drop drop) {
+            Drop drop1 = (Drop) stmt;
+            String table_name = drop1.getName().getName();
+            DropExecutor dropExecutor = new DropExecutor(dbManager,table_name);
+            dropExecutor.execute();
             return null;
         } else {
             throw new DBException(ExceptionTypes.UnsupportedCommand((stmt.toString())));

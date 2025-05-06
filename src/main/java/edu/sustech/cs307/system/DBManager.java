@@ -146,6 +146,7 @@ public class DBManager {
      */
     public void dropTable(String table_name) throws DBException {
         // todo: finish drop table method
+        metaManager.dropTable(table_name);
     }
 
     /**
