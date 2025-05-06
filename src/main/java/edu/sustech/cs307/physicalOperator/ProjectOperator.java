@@ -67,6 +67,17 @@ public class ProjectOperator implements PhysicalOperator {
     @Override
     public ArrayList<ColumnMeta> outputSchema() {
         //todo: return the fields only appear in select items.
-        return child.outputSchema();
+        ArrayList<String> columns = new ArrayList<>();
+        ArrayList<ColumnMeta> result = new ArrayList<>();
+        for (TabCol tabCol : outputSchema){
+            columns.add(tabCol.getColumnName());
+        }
+        for (ColumnMeta columnMeta : child.outputSchema()) {
+            if (columns.contains(columnMeta.name)) {
+                result.add(columnMeta);
+            }
+        }
+
+        return result;
     }
 }
