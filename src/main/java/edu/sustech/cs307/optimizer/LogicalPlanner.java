@@ -60,16 +60,16 @@ public class LogicalPlanner {
             showTablesExecutor.execute();
             return null;
         } else if (stmt instanceof DescribeStatement describeStatement) {
-            DescribeStatement describeStmt = (DescribeStatement) stmt;
-            String name = describeStmt.getTable().getName();
-            DescribeExecutor describeExecutor = new DescribeExecutor(dbManager,name);
+            DescribeExecutor describeExecutor = new DescribeExecutor(dbManager,describeStatement);
             describeExecutor.execute();
             return null;
         } else if (stmt instanceof Drop drop) {
-            Drop drop1 = (Drop) stmt;
-            String table_name = drop1.getName().getName();
-            DropExecutor dropExecutor = new DropExecutor(dbManager,table_name);
+            DropExecutor dropExecutor = new DropExecutor(dbManager,drop);
             dropExecutor.execute();
+            return null;
+        } else if (stmt instanceof ExplainStatement explainStatement) {
+            ExplainExecutor explainExecutor = new ExplainExecutor(explainStatement, dbManager);
+            explainExecutor.execute();
             return null;
         } else {
             throw new DBException(ExceptionTypes.UnsupportedCommand((stmt.toString())));

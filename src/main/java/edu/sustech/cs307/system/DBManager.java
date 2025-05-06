@@ -147,6 +147,9 @@ public class DBManager {
     public void dropTable(String table_name) throws DBException {
         // todo: finish drop table method
         metaManager.dropTable(table_name);
+        String table_folder = String.format("%s/%s", diskManager.getCurrentDir(), table_name);
+        File file_folder = new File(table_folder);
+        deleteDirectory(file_folder);
     }
 
     /**

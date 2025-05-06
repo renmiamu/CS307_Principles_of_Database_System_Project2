@@ -7,6 +7,7 @@ import edu.sustech.cs307.logicalOperator.LogicalOperator;
 
 import net.sf.jsqlparser.statement.ExplainStatement;
 
+import net.sf.jsqlparser.statement.Statement;
 import org.pmw.tinylog.Logger;
 
 public class ExplainExecutor implements DMLExecutor {
@@ -21,6 +22,9 @@ public class ExplainExecutor implements DMLExecutor {
 
     @Override
     public void execute() throws DBException {
-       //todo: finish this function here, and add log info
+        Statement stmt = explainStatement.getStatement();
+        LogicalOperator operator = LogicalPlanner.resolveAndPlan(dbManager, stmt.toString());
+        Logger.info(operator.toString());
+        //todo: finish this function here, and add log info
     }
 }
