@@ -70,10 +70,10 @@ public class ProjectOperator implements PhysicalOperator {
         ArrayList<String> columns = new ArrayList<>();
         ArrayList<ColumnMeta> result = new ArrayList<>();
         for (TabCol tabCol : outputSchema){
-            columns.add(tabCol.getColumnName());
+            columns.add(tabCol.getColumnName().toLowerCase());
         }
         for (ColumnMeta columnMeta : child.outputSchema()) {
-            if (columns.contains(columnMeta.name)) {
+            if (columns.contains(columnMeta.name.toLowerCase())) {
                 result.add(columnMeta);
             }
         }

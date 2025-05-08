@@ -28,6 +28,9 @@ public abstract class Tuple {
             // Recursively evaluate left and right expressions
             return evaluateCondition(tuple, andExpr.getLeftExpression())
                     && evaluateCondition(tuple, andExpr.getRightExpression());
+        } else if (whereExpr instanceof OrExpression orExpression) {
+            return evaluateCondition(tuple, orExpression.getLeftExpression())
+                    || evaluateCondition(tuple, orExpression.getRightExpression());
         } else if (whereExpr instanceof BinaryExpression binaryExpression) {
             return evaluateBinaryExpression(tuple, binaryExpression);
         } else {
@@ -71,6 +74,14 @@ public abstract class Tuple {
             int comparisonResult = ValueComparer.compare(leftValue, rightValue);
             if (operator.equals("=")) {
                 return comparisonResult == 0;
+            } else if (operator.equals(">")) {
+                return comparisonResult == 1;
+            } else if (operator.equals("<")) {
+                return comparisonResult == -1;
+            } else if (operator.equals(">=")) {
+                return comparisonResult >= 0;
+            } else if (operator.equals("<=")) {
+                return comparisonResult <= 0;
             }
             // todo: finish condition > < >= <=
 

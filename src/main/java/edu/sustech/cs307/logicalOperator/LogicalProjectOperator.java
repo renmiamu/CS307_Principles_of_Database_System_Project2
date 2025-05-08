@@ -29,7 +29,11 @@ public class LogicalProjectOperator extends LogicalOperator {
 
     public List<TabCol> getOutputSchema() throws DBException {
         List<TabCol> outputSchema = new ArrayList<>();
-        LogicalTableScanOperator op = (LogicalTableScanOperator)child;
+        LogicalOperator iter = child;
+        while (!(iter instanceof LogicalTableScanOperator)) {
+            iter = iter.getChild();
+        }
+        LogicalTableScanOperator op = (LogicalTableScanOperator)iter;
         String table_name = op.getTableName();
         for (SelectItem<?> selectItem : selectItems) {
             //todo : add selectItem.getExpression() instance of Column
