@@ -10,6 +10,7 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.SplittableRandom;
 
 public class LogicalProjectOperator extends LogicalOperator {
 
@@ -28,10 +29,12 @@ public class LogicalProjectOperator extends LogicalOperator {
 
     public List<TabCol> getOutputSchema() throws DBException {
         List<TabCol> outputSchema = new ArrayList<>();
+        LogicalTableScanOperator op = (LogicalTableScanOperator)child;
+        String table_name = op.getTableName();
         for (SelectItem<?> selectItem : selectItems) {
             //todo : add selectItem.getExpression() instance of Column
             if (selectItem.getExpression() instanceof Column c) {
-                outputSchema.add(new TabCol(c.getTableName(), c.getColumnName()));
+                outputSchema.add(new TabCol(table_name, c.getColumnName()));
             } else if (selectItem.getExpression() instanceof AllColumns column) {
                 outputSchema.add(new TabCol("*", "*"));
             } else {

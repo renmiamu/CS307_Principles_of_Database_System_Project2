@@ -42,9 +42,15 @@ public abstract class Tuple {
         Value leftValue = null;
         Value rightValue = null;
 
+
         try {
             if (leftExpr instanceof Column leftColumn) {
-                leftValue = tuple.getValue(new TabCol(leftColumn.getTableName(), leftColumn.getColumnName()));
+                String table_name = leftColumn.getTableName();
+                if (tuple instanceof TableTuple) {
+                    TableTuple tableTuple = (TableTuple) tuple;
+                    table_name = tableTuple.getTableName();
+                }
+                leftValue = tuple.getValue(new TabCol(table_name, leftColumn.getColumnName()));
                 if (leftValue.type == ValueType.CHAR) {
                     leftValue = new Value(leftValue.toString());
                 }

@@ -123,8 +123,6 @@ public class LogicalPlanner {
         if (deleteStmt.getWhere() != null) {
             root = new LogicalFilterOperator(root, deleteStmt.getWhere());
         }
-
-
         return new LogicalDeleteOperator(root, deleteStmt.getTable().getName());
     }
 }

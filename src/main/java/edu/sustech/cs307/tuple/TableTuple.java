@@ -84,4 +84,5 @@ public class TableTuple extends Tuple {
     public RID getRID() {
         return this.rid;
     }
+    public String getTableName() { return this.tableName; };
 }

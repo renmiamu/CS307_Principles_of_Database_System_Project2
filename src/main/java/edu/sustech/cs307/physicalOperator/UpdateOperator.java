@@ -63,6 +63,7 @@ public class UpdateOperator implements PhysicalOperator {
 
                 for (int i = 0; i < this.updateSet.getColumns().size(); i++) {
                     String targetTable = updateSet.getColumn(i).getTableName();
+                    if (targetTable) targetTable = tuple.getTableName();
                     String targetColumn = updateSet.getColumn(i).getColumnName();
                     int index = -1;
                     for (int j = 0; j < schema.length; j++) {
