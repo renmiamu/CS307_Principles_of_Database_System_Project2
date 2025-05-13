@@ -199,6 +199,7 @@ public class PhysicalPlanner {
     }
 
     private static PhysicalOperator handleDelete(DBManager dbManager, LogicalDeleteOperator logicalDeleteOp) throws DBException {
-        return generateOperator(dbManager, logicalDeleteOp);
+        PhysicalOperator scanner = generateOperator(dbManager, logicalDeleteOp.getChild());
+        return new DeleteOperator(scanner, logicalDeleteOp.getTableName(), logicalDeleteOp.getExpression());
     }
 }
