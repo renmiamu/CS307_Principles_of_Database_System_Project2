@@ -61,10 +61,14 @@ public class TableTuple extends Tuple {
     public TabCol[] getTupleSchema() {
         ArrayList<TabCol> result = new ArrayList<TabCol>();
         // [this.tableMeta.getColumns().size()];
-        this.tableMeta.getColumns().values().stream().forEach(columnMeta -> {
+        for (ColumnMeta columnMeta : tableMeta.columns_list) {
             TabCol tabCol = new TabCol(columnMeta.tableName, columnMeta.name);
             result.add(tabCol);
-        });
+        }
+//        this.tableMeta.getColumns().values().stream().forEach(columnMeta -> {
+//            TabCol tabCol = new TabCol(columnMeta.tableName, columnMeta.name);
+//            result.add(tabCol);
+//        });
         return result.toArray(new TabCol[0]);
 
     }
@@ -73,7 +77,7 @@ public class TableTuple extends Tuple {
     public Value[] getValues() throws DBException {
         // 通过 meta 顺序和信息获取所有 Value
         ArrayList<Value> values = new ArrayList<>();
-        for (ColumnMeta columnMeta : this.tableMeta.getColumns().values()) {
+        for (ColumnMeta columnMeta : this.tableMeta.columns_list) {
             TabCol tabCol = new TabCol(columnMeta.tableName, columnMeta.name);
             Value value = getValue(tabCol);
             values.add(value);

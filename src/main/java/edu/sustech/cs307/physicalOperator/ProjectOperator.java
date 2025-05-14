@@ -5,8 +5,6 @@ import edu.sustech.cs307.meta.ColumnMeta;
 import edu.sustech.cs307.tuple.ProjectTuple;
 import edu.sustech.cs307.tuple.Tuple;
 import edu.sustech.cs307.meta.TabCol;
-import edu.sustech.cs307.value.ValueType;
-
 import java.util.ArrayList;
 import java.util.List;
 
