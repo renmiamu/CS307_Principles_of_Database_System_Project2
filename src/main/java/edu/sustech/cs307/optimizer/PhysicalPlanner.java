@@ -38,9 +38,9 @@ public class PhysicalPlanner {
             return handleUpdate(dbManager, updateOperator);
         } else if (logicalOp instanceof LogicalDeleteOperator deleteOperator) {
             return handleDelete(dbManager, deleteOperator);
-        }
-
-        else {
+        } else if (logicalOp instanceof LogicalAggregateOperator aggregateOperator) {
+          return handleAggregate(dbManager, aggregateOperator);
+        } else {
             throw new DBException(ExceptionTypes.UnsupportedOperator(logicalOp.getClass().getSimpleName()));
         }
     }
@@ -86,6 +86,12 @@ public class PhysicalPlanner {
             throws DBException {
         PhysicalOperator inputOp = generateOperator(dbManager, logicalProjectOp.getChild());
         return new ProjectOperator(inputOp, logicalProjectOp.getOutputSchema());
+    }
+
+    private static PhysicalOperator handleAggregate(DBManager dbManager, LogicalAggregateOperator aggregateOperator)
+            throws DBException {
+        PhysicalOperator inputOp = generateOperator(dbManager, aggregateOperator.getChild());
+        return inputOp;
     }
 
     /**

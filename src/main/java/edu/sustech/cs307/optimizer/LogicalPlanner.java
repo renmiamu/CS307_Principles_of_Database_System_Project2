@@ -1,9 +1,11 @@
 package edu.sustech.cs307.optimizer;
 
 import java.io.StringReader;
+import java.util.List;
 
 import edu.sustech.cs307.logicalOperator.dml.*;
 import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.parser.JSqlParser;
 import net.sf.jsqlparser.statement.DescribeStatement;
@@ -100,11 +102,27 @@ public class LogicalPlanner {
         }
 
         // 在 Join 之后应用 Filter，Filter 的输入是 Join 的结果 (root)
-        if (plainSelect.getWhere() != null) {
-            root = new LogicalFilterOperator(root, plainSelect.getWhere());
+        if (!hasAggregate(plainSelect)) {
+            if (plainSelect.getWhere() != null) {
+                root = new LogicalFilterOperator(root, plainSelect.getWhere());
+            }
+            root = new LogicalProjectOperator(root, plainSelect.getSelectItems());
+        } else {
+            if (plainSelect.getGroupBy() != null) {
+                root = new LogicalGroupByOperator(root, plainSelect.getGroupBy());
+                System.out.println(plainSelect.getGroupBy().toString());
+            }
+            root = new LogicalAggregateOperator(root, plainSelect.getSelectItems());
         }
-        root = new LogicalProjectOperator(root, plainSelect.getSelectItems());
+
         return root;
+    }
+
+    private static boolean hasAggregate(PlainSelect select) {
+        for (SelectItem<?> selectItem : select.getSelectItems()) {
+            if (selectItem.getExpression() instanceof Function function) return true;
+        }
+        return false;
     }
 
     private static LogicalOperator handleInsert(DBManager dbManager, Insert insertStmt) {
