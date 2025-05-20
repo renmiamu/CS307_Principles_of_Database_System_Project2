@@ -21,10 +21,27 @@ public enum ExceptionTypes {
     INSERT_COLUMN_NAME_NOT_MATCH,
     INSERT_COLUMN_TYPE_NOT_MATCH,
     GET_VALUE_FROM_TEMP_TUPLE,
-    NOT_SUPPORTED_OPERATION
+    NOT_SUPPORTED_OPERATION,
+    NON_GROUPED_COLUMN,
+    TYPE_MISMATCH,
+    UNSUPPORTED_FUNCTION
     ;
 
     private String error_result;
+
+    public static ExceptionTypes TypeMismatch(String string) {
+        TYPE_MISMATCH.SetErrorResult(
+                String.format("SUM函数无法应用于非数值类型列%s", string)
+        );
+        return TYPE_MISMATCH;
+    }
+
+    public static ExceptionTypes UnsupportedFunction(String functionName) {
+        UNSUPPORTED_FUNCTION.SetErrorResult(
+                String.format("Unsupported Aggregated function %s", functionName)
+        );
+        return UNSUPPORTED_FUNCTION;
+    }
 
     public void SetErrorResult(String error_result) {
         this.error_result = error_result;
@@ -154,5 +171,13 @@ public enum ExceptionTypes {
                 String.format("Unsupported operation: %s", expression)
         );
         return NOT_SUPPORTED_OPERATION;
+    }
+
+    static public ExceptionTypes NonGroupedColumn(String string) {
+        NON_GROUPED_COLUMN.SetErrorResult(
+                String.format("%s is not contained in either an aggregate function" +
+                        " or the GROUP BY clause ", string)
+        );
+        return NON_GROUPED_COLUMN;
     }
 }

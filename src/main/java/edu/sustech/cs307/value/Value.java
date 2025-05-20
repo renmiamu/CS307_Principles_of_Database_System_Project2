@@ -104,4 +104,7 @@ public class Value {
             default -> throw new RuntimeException("Unsupported value type: " + type);
         }
     }
+    public ValueType getType(){
+        return type;
+    }
 }

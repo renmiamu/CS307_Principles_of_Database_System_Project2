@@ -1,10 +1,14 @@
 package edu.sustech.cs307.optimizer;
 
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.List;
 
+import edu.sustech.cs307.aggregation.AggregateFunction;
+import edu.sustech.cs307.aggregation.SumFunction;
 import edu.sustech.cs307.logicalOperator.dml.*;
 import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.parser.JSqlParser;
@@ -103,24 +107,97 @@ public class LogicalPlanner {
 
         // 在 Join 之后应用 Filter，Filter 的输入是 Join 的结果 (root)
         if (!hasAggregate(plainSelect)) {
+            // 非聚合查询：Filter -> Project
             if (plainSelect.getWhere() != null) {
                 root = new LogicalFilterOperator(root, plainSelect.getWhere());
             }
             root = new LogicalProjectOperator(root, plainSelect.getSelectItems());
         } else {
+            // 聚合查询：处理 GROUP BY 和聚合函数
+            // 1. 提取 GROUP BY 表达式（如 dept）
+            List<Expression> groupByExpressions = new ArrayList<>();
             if (plainSelect.getGroupBy() != null) {
-                root = new LogicalGroupByOperator(root, plainSelect.getGroupBy());
-                System.out.println(plainSelect.getGroupBy().toString());
+                groupByExpressions = plainSelect.getGroupBy().getGroupByExpressionList();
             }
-            root = new LogicalAggregateOperator(root, plainSelect.getSelectItems());
+            // 2. 提取 SELECT 中的聚合函数（如 SUM(salary)）
+            List<AggregateFunction> aggregateFunctions = extractAggFunctions(plainSelect.getSelectItems());
+
+            // 3. 校验非聚合字段是否在 GROUP BY 中（如 SELECT dept, salary ... GROUP BY dept）
+            validateNonAggColumns(plainSelect.getSelectItems(), groupByExpressions);
+
+            // 4. 创建 LogicalAggregateOperator 统一处理分组和聚合
+            root = new LogicalAggregateOperator(root, groupByExpressions, aggregateFunctions);
+
+            // 5. 最后添加 ProjectOperator 选择输出列
+            root = new LogicalProjectOperator(root, plainSelect.getSelectItems());
         }
 
         return root;
     }
+    private static void validateNonAggColumns(List<SelectItem<?>> selectItems, List<Expression> groupByExpressions)
+            throws DBException {
+        List<Expression> nonAggColumns = new ArrayList<>();
+        for (SelectItem<?> item : selectItems) {
+            Expression expr = item.getExpression();
+            if (!(expr instanceof Function) &&
+            !containsExp(groupByExpressions, expr.toString())) {
+                nonAggColumns.add(expr);
+            }
+        }
+        if (!nonAggColumns.isEmpty()) {
+            throw new DBException(ExceptionTypes.NonGroupedColumn(nonAggColumns.toString()));
+        }
+    }
+    private static boolean containsExp(List<Expression> groupByExpressions, String exp) {
+        for (Expression expression : groupByExpressions) {
+            if (exp.equals(expression.toString())) return true;
+        }
+        return false;
+    }
+    private static List<AggregateFunction> extractAggFunctions(List<SelectItem<?>> selectItems) throws DBException {
+        List<AggregateFunction> aggFunctions = new ArrayList<>();
+        for (SelectItem<?> item : selectItems) {
+            Expression expr = item.getExpression();
+            if (expr instanceof Function function) {
+                String funcName = function.getName().toUpperCase();
+                if (isAggregateFunction(funcName)) {
+                    String columnName = function.getParameters().toString();
+                    aggFunctions.add(getAggFunction(funcName, columnName));
+                }
+            }
+        }
+        return aggFunctions;
+    }
+
+    private static AggregateFunction getAggFunction(String functionName, String columnName)
+            throws DBException {
+        switch (functionName.toUpperCase()) {
+            case "SUM":
+                return new SumFunction(columnName);
+//            case "AVG":
+//                return new AvgFunction(columnName);
+//            case "COUNT":
+//                return new CountFunction(columnName);
+//            case "MAX":
+//                return new MaxFunction(columnName);
+//            case "MIN":
+//                return new MinFunction(columnName);
+            default:
+                throw new DBException(ExceptionTypes.UnsupportedFunction(functionName));
+        }
+    }
+
+    private static boolean isAggregateFunction(String funcName) {
+        return funcName.equals("SUM") || funcName.equals("AVG") || funcName.equals("COUNT")
+                || funcName.equals("MAX") || funcName.equals("MIN");
+    }
 
     private static boolean hasAggregate(PlainSelect select) {
         for (SelectItem<?> selectItem : select.getSelectItems()) {
-            if (selectItem.getExpression() instanceof Function function) return true;
+            if (selectItem.getExpression() instanceof Function function) {
+                String funcName = function.getName().toUpperCase();
+                if (isAggregateFunction(funcName)) return true;
+            };
         }
         return false;
     }
