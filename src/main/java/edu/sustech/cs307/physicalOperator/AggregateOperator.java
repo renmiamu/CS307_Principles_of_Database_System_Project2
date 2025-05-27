@@ -123,8 +123,9 @@ public class AggregateOperator implements PhysicalOperator {
 
         //先放 group by 列值
         if (key != GroupKey.EMPTY) {
-            for (TabCol tabCol : key.tabCols) {
-                if (checkOutput(tabCol)) out.addAll(key.cols);
+            for (int i = 0; i < key.cols.size(); i++) {
+                TabCol tabCol = key.tabCols.get(i);
+                if (checkOutput(tabCol)) out.add(key.cols.get(i));
             }
         }
 
