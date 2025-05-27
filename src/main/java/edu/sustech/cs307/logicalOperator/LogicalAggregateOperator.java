@@ -48,11 +48,11 @@ public class LogicalAggregateOperator extends LogicalOperator {
         }
         LogicalTableScanOperator op = (LogicalTableScanOperator)iter;
         String table_name = op.getTableName();
-        for (AggregateFunction aggFunc : aggregateFunctions) {
-            outputSchema.add(new TabCol(table_name, aggFunc.alias()));
-        }
         for (Expression exp : groupByExpressions) {
             outputSchema.add(new TabCol(table_name, exp.toString()));
+        }
+        for (AggregateFunction aggFunc : aggregateFunctions) {
+            outputSchema.add(new TabCol(table_name, aggFunc.alias()));
         }
         return outputSchema;
     }

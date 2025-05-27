@@ -93,7 +93,7 @@ public class PhysicalPlanner {
             throws DBException {
         PhysicalOperator inputOp = generateOperator(dbManager, aggregateOperator.getChild());
         return new AggregateOperator(inputOp, aggregateOperator.getAggregateFunctions(),
-                aggregateOperator.getOutputSchema()//,aggregateOperator.getGroupByExpressions()
+                aggregateOperator.getOutputSchema(),aggregateOperator.getGroupByExpressions()
                  );
     }
 

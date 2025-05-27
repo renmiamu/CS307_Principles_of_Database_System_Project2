@@ -1,5 +1,7 @@
 package edu.sustech.cs307.value;
 
+import edu.sustech.cs307.exception.DBException;
+
 import java.nio.ByteBuffer;
 
 public class Value {
@@ -106,5 +108,25 @@ public class Value {
     }
     public ValueType getType(){
         return type;
+    }
+    @Override
+    public int hashCode() {
+        return switch (type) {
+            case INTEGER -> Long.hashCode((Long) value);
+            case FLOAT   -> Double.hashCode((Double) value);
+            case CHAR    -> value.hashCode();   // String 自带良好 hash
+            default      -> 0;
+        };
+    }
+    @Override
+
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        Value other = (Value) obj;
+        try {
+            return ValueComparer.compare(this, other) == 0; // null-safe
+        } catch (DBException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
