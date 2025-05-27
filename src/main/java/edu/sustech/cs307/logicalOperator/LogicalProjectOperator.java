@@ -3,6 +3,7 @@ package edu.sustech.cs307.logicalOperator;
 import edu.sustech.cs307.exception.DBException;
 import edu.sustech.cs307.exception.ExceptionTypes;
 import edu.sustech.cs307.meta.TabCol;
+import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.AllColumns;
 import net.sf.jsqlparser.statement.select.SelectItem;
@@ -41,6 +42,8 @@ public class LogicalProjectOperator extends LogicalOperator {
                 outputSchema.add(new TabCol(table_name, c.getColumnName()));
             } else if (selectItem.getExpression() instanceof AllColumns column) {
                 outputSchema.add(new TabCol("*", "*"));
+            } else if (selectItem.getExpression() instanceof Function function) {
+                outputSchema.add(new TabCol(table_name, function.toString()));
             } else {
                 throw new DBException(ExceptionTypes.NotSupportedOperation(selectItem.getExpression()));
             }

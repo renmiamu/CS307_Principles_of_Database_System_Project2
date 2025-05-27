@@ -13,6 +13,7 @@ import edu.sustech.cs307.system.DBManager;
 import edu.sustech.cs307.system.RecordManager;
 import edu.sustech.cs307.tuple.Tuple;
 
+import edu.sustech.cs307.value.Value;
 import org.apache.commons.lang3.StringUtils;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -121,6 +122,7 @@ public class DBEntry {
         StringBuilder header = new StringBuilder("|");
         for (var entry : columnMetas) {
             String tabcol = String.format("%s.%s", entry.tableName, entry.name);
+            if (entry.tableName.equals("")) tabcol = String.format("%s", entry.name);
             String centeredText = StringUtils.center(tabcol, 15, ' ');
             header.append(centeredText).append("|");
         }
@@ -129,7 +131,8 @@ public class DBEntry {
 
     private static String getRecordString(Tuple tuple) throws DBException {
         StringBuilder tuple_string = new StringBuilder("|");
-        for (var entry : tuple.getValues()) {
+        Value[] values = tuple.getValues();
+        for (var entry : values) {
             String tabCol = String.format("%s", entry);
             String centeredText = StringUtils.center(tabCol, 15, ' ');
             tuple_string.append(centeredText).append("|");

@@ -20,4 +20,12 @@ public enum ValueType {
             case UNKNOWN -> "unknown";
         };
     }
+    public int getLen () {
+        return switch (this) {
+            case CHAR -> 64;
+            case INTEGER -> 8;
+            case FLOAT -> 8;
+            case UNKNOWN -> 0;
+        };
+    }
 }

@@ -41,7 +41,6 @@ public class ProjectOperator implements PhysicalOperator {
             child.Next();
             Tuple inputTuple = child.Current();
             if (inputTuple != null) {
-
                 currentTuple = new ProjectTuple(inputTuple, outputSchema); // Create ProjectTuple
             } else {
                 currentTuple = null;

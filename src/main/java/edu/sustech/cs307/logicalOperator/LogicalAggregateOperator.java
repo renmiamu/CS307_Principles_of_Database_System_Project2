@@ -1,7 +1,16 @@
 package edu.sustech.cs307.logicalOperator;
 
 import edu.sustech.cs307.aggregation.AggregateFunction;
+import edu.sustech.cs307.exception.DBException;
+import edu.sustech.cs307.exception.ExceptionTypes;
+import edu.sustech.cs307.meta.TabCol;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Function;
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.select.AllColumns;
+import net.sf.jsqlparser.statement.select.SelectItem;
+
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,11 +40,28 @@ public class LogicalAggregateOperator extends LogicalOperator {
         return aggregateFunctions;
     }
 
+    public List<TabCol> getOutputSchema() throws DBException {
+        List<TabCol> outputSchema = new ArrayList<>();
+        LogicalOperator iter = child;
+        while (!(iter instanceof LogicalTableScanOperator)) {
+            iter = iter.getChild();
+        }
+        LogicalTableScanOperator op = (LogicalTableScanOperator)iter;
+        String table_name = op.getTableName();
+        for (AggregateFunction aggFunc : aggregateFunctions) {
+            outputSchema.add(new TabCol(table_name, aggFunc.alias()));
+        }
+        for (Expression exp : groupByExpressions) {
+            outputSchema.add(new TabCol(table_name, exp.toString()));
+        }
+        return outputSchema;
+    }
     @Override
     public String toString() {
-        return "LogicalAggregateOperator(" +
-                "groupBy=" + groupByExpressions.get(0) +
-                ", aggregates=" + aggregateFunctions.get(0) +
-                ")";
+        String gb = groupByExpressions == null || groupByExpressions.isEmpty()
+                ? "[]"
+                : groupByExpressions.toString();
+        return "LogicalAggregateOperator(groupBy=" + gb +
+                ", aggregates=" + aggregateFunctions.toString() + ")";
     }
 }

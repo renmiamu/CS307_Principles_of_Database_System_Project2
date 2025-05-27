@@ -4,12 +4,13 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.sustech.cs307.aggregation.AggregateFunction;
-import edu.sustech.cs307.aggregation.SumFunction;
+import edu.sustech.cs307.aggregation.*;
 import edu.sustech.cs307.logicalOperator.dml.*;
+import edu.sustech.cs307.meta.TabCol;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.parser.JSqlParser;
 import net.sf.jsqlparser.statement.DescribeStatement;
@@ -92,6 +93,7 @@ public class LogicalPlanner {
             throw new DBException(ExceptionTypes.UnsupportedCommand((plainSelect.toString())));
         }
         LogicalOperator root = new LogicalTableScanOperator(plainSelect.getFromItem().toString(), dbManager);
+        String table_name = plainSelect.getFromItem().toString();
 
         int depth = 0;
         if (plainSelect.getJoins() != null) {
@@ -114,13 +116,13 @@ public class LogicalPlanner {
             root = new LogicalProjectOperator(root, plainSelect.getSelectItems());
         } else {
             // 聚合查询：处理 GROUP BY 和聚合函数
-            // 1. 提取 GROUP BY 表达式（如 dept）
+            // 1. 提取 GROUP BY 表达式（如 t.age）
             List<Expression> groupByExpressions = new ArrayList<>();
             if (plainSelect.getGroupBy() != null) {
                 groupByExpressions = plainSelect.getGroupBy().getGroupByExpressionList();
             }
-            // 2. 提取 SELECT 中的聚合函数（如 SUM(salary)）
-            List<AggregateFunction> aggregateFunctions = extractAggFunctions(plainSelect.getSelectItems());
+            // 2. 提取 SELECT 中的聚合函数（如 SUM(gpa)）
+            List<AggregateFunction> aggregateFunctions = extractAggFunctions(plainSelect.getSelectItems(), table_name);
 
             // 3. 校验非聚合字段是否在 GROUP BY 中（如 SELECT dept, salary ... GROUP BY dept）
             validateNonAggColumns(plainSelect.getSelectItems(), groupByExpressions);
@@ -154,7 +156,8 @@ public class LogicalPlanner {
         }
         return false;
     }
-    private static List<AggregateFunction> extractAggFunctions(List<SelectItem<?>> selectItems) throws DBException {
+    private static List<AggregateFunction> extractAggFunctions(
+            List<SelectItem<?>> selectItems, String table_name) throws DBException {
         List<AggregateFunction> aggFunctions = new ArrayList<>();
         for (SelectItem<?> item : selectItems) {
             Expression expr = item.getExpression();
@@ -162,26 +165,27 @@ public class LogicalPlanner {
                 String funcName = function.getName().toUpperCase();
                 if (isAggregateFunction(funcName)) {
                     String columnName = function.getParameters().toString();
-                    aggFunctions.add(getAggFunction(funcName, columnName));
+                    aggFunctions.add(getAggFunction(funcName, columnName, table_name));
                 }
             }
         }
         return aggFunctions;
     }
 
-    private static AggregateFunction getAggFunction(String functionName, String columnName)
+    private static AggregateFunction getAggFunction(
+            String functionName, String columnName, String table_name)
             throws DBException {
         switch (functionName.toUpperCase()) {
             case "SUM":
-                return new SumFunction(columnName);
-//            case "AVG":
-//                return new AvgFunction(columnName);
-//            case "COUNT":
-//                return new CountFunction(columnName);
-//            case "MAX":
-//                return new MaxFunction(columnName);
-//            case "MIN":
-//                return new MinFunction(columnName);
+                return new SumFunction(columnName, new TabCol(table_name, columnName));
+            case "AVG":
+                return new AvgFunction(columnName, new TabCol(table_name, columnName));
+            case "COUNT":
+                return new CountFunction(columnName, new TabCol(table_name, columnName));
+            case "MAX":
+                return new MaxFunction(columnName, new TabCol(table_name, columnName));
+            case "MIN":
+                return new MinFunction(columnName, new TabCol(table_name, columnName));
             default:
                 throw new DBException(ExceptionTypes.UnsupportedFunction(functionName));
         }

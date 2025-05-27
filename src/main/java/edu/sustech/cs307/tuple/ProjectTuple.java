@@ -49,6 +49,7 @@ public class ProjectTuple extends Tuple {
 
     @Override
     public Value[] getValues() throws DBException {
+        if (inputTuple instanceof TempTuple tuple) return tuple.getValues();
         // 通过 meta 顺序和信息获取所有 Value
         ArrayList<Value> values = new ArrayList<>();
         for (var tabCol : this.schema) {

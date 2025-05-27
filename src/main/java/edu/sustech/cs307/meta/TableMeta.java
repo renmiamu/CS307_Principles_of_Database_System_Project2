@@ -68,6 +68,9 @@ public class TableMeta {
     }
 
     public ColumnMeta getColumnMeta(String columnName) {
+        if (columnName.contains(".")) {
+            columnName = columnName.substring(columnName.indexOf('.')+1);
+        }
         if (this.columns.containsKey(columnName)) {
             return this.columns.get(columnName);
         }
