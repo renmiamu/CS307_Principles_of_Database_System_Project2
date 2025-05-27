@@ -129,11 +129,15 @@ public class LogicalPlanner {
 
             // 4. 创建 LogicalAggregateOperator 统一处理分组和聚合
             root = new LogicalAggregateOperator(root, groupByExpressions, aggregateFunctions);
-
-            // 5. 最后添加 ProjectOperator 选择输出列
-            root = new LogicalProjectOperator(root, plainSelect.getSelectItems());
+        }
+        // 判断是否含有order by
+        List<OrderByElement> orderByElements = plainSelect.getOrderByElements();
+        if (orderByElements != null) {
+            root = new LogicalSortOperator(root, orderByElements, table_name);
         }
 
+        // 5. 最后添加 ProjectOperator 选择输出列
+        root = new LogicalProjectOperator(root, plainSelect.getSelectItems());
         return root;
     }
     private static void validateNonAggColumns(List<SelectItem<?>> selectItems, List<Expression> groupByExpressions)

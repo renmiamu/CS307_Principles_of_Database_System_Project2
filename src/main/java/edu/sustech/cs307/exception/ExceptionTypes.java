@@ -23,17 +23,17 @@ public enum ExceptionTypes {
     GET_VALUE_FROM_TEMP_TUPLE,
     NOT_SUPPORTED_OPERATION,
     NON_GROUPED_COLUMN,
-    TYPE_MISMATCH,
+    GET_VALUE_FROM_INVALID_TUPLE,
     UNSUPPORTED_FUNCTION
     ;
 
     private String error_result;
 
-    public static ExceptionTypes TypeMismatch(String string) {
-        TYPE_MISMATCH.SetErrorResult(
+    public static ExceptionTypes InvalidTuple(String string) {
+        GET_VALUE_FROM_INVALID_TUPLE.SetErrorResult(
                 String.format("SUM函数无法应用于非数值类型列%s", string)
         );
-        return TYPE_MISMATCH;
+        return GET_VALUE_FROM_INVALID_TUPLE;
     }
 
     public static ExceptionTypes UnsupportedFunction(String functionName) {

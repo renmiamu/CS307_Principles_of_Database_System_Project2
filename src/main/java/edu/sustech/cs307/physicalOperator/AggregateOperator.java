@@ -21,7 +21,6 @@ public class AggregateOperator implements PhysicalOperator {
     private Iterator<Map.Entry<GroupKey, AggState[]>> outputIter;
     private Map.Entry<GroupKey, AggState[]> current;
     private Tuple inputTuple;
-    private boolean produced = false;
 
     public AggregateOperator(PhysicalOperator child,
                              List<AggregateFunction> aggFuncs,
