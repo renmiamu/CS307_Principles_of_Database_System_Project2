@@ -145,6 +145,8 @@ public class DBManager {
      *                     errors during deletion
      */
     public void dropTable(String table_name) throws DBException {
+        if (!isDirExists(table_name)) throw new DBException(ExceptionTypes.BadIOError("" +
+                "Does not exists table " + table_name));
         // todo: finish drop table method
         metaManager.dropTable(table_name);
         String table_folder = String.format("%s/%s", diskManager.getCurrentDir(), table_name);
