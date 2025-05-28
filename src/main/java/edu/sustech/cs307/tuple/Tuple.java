@@ -9,7 +9,14 @@ import edu.sustech.cs307.value.ValueType;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
+import net.sf.jsqlparser.expression.operators.relational.InExpression;
+import net.sf.jsqlparser.expression.operators.relational.ParenthesedExpressionList;
 import net.sf.jsqlparser.schema.Column;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public abstract class Tuple {
     public abstract Value getValue(TabCol tabCol) throws DBException;
@@ -22,7 +29,7 @@ public abstract class Tuple {
         return evaluateCondition(this, expr);
     }
 
-    private boolean evaluateCondition(Tuple tuple, Expression whereExpr) {
+    private boolean evaluateCondition(Tuple tuple, Expression whereExpr) throws DBException {
         //todo: add Or condition
         if (whereExpr instanceof AndExpression andExpr) {
             // Recursively evaluate left and right expressions
@@ -33,11 +40,30 @@ public abstract class Tuple {
                     || evaluateCondition(tuple, orExpression.getRightExpression());
         } else if (whereExpr instanceof BinaryExpression binaryExpression) {
             return evaluateBinaryExpression(tuple, binaryExpression);
+        } else if (whereExpr instanceof InExpression inExpression) {
+            return evaluateInExpression(tuple, inExpression);
         } else {
             return true; // For non-binary and non-AND expressions, just return true for now
         }
     }
-
+    private boolean evaluateInExpression(Tuple tuple, InExpression inExpression) throws DBException {
+        boolean contains = false;
+        Expression leftExpr = inExpression.getLeftExpression();
+        ParenthesedExpressionList<Expression> exprList =
+                (ParenthesedExpressionList<Expression>) inExpression.getRightExpression();
+        TabCol[] tabCols = tuple.getTupleSchema();
+        String left = "";
+        for (int i = 0; i < tabCols.length; i++) {
+            String colName = tabCols[i].getColumnName().toLowerCase();
+            if (leftExpr.toString().toLowerCase().equals(colName)) {
+                left = tuple.getValue(tabCols[i]).toString().toLowerCase();
+            }
+        }
+        for (Expression expr : exprList) {
+            if (expr.toString().toLowerCase().equals(left)) contains = true;
+        }
+        return inExpression.isNot() ? !contains : contains;
+    }
     private boolean evaluateBinaryExpression(Tuple tuple, BinaryExpression binaryExpr) {
         Expression leftExpr = binaryExpr.getLeftExpression();
         Expression rightExpr = binaryExpr.getRightExpression();
