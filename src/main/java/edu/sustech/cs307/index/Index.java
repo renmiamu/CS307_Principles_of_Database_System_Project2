@@ -1,6 +1,7 @@
 package edu.sustech.cs307.index;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import edu.sustech.cs307.record.RID;
@@ -14,4 +15,6 @@ public interface Index {
     Iterator<Entry<Value, RID>> MoreThan(Value value, boolean isEqual);
 
     Iterator<Entry<Value, RID>> Range(Value low, Value high, boolean leftEqual, boolean rightEqual);
+
+    void SaveIndexes(String persistPath, Map<Value, RID> map);
 }

@@ -7,6 +7,7 @@ import java.util.List;
 import edu.sustech.cs307.aggregation.*;
 import edu.sustech.cs307.logicalOperator.dml.*;
 import edu.sustech.cs307.meta.TabCol;
+import edu.sustech.cs307.meta.TableMeta;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
@@ -17,6 +18,7 @@ import net.sf.jsqlparser.statement.DescribeStatement;
 import net.sf.jsqlparser.statement.ExplainStatement;
 import net.sf.jsqlparser.statement.ShowStatement;
 import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.create.index.CreateIndex;
 import net.sf.jsqlparser.statement.drop.Drop;
 import net.sf.jsqlparser.statement.select.*;
 import net.sf.jsqlparser.statement.show.ShowTablesStatement;
@@ -49,6 +51,8 @@ public class LogicalPlanner {
             operator = handleUpdate(dbManager, updateStmt);
         } else if (stmt instanceof Delete deleteStmt) {
             operator = handleDelete(dbManager, deleteStmt);
+        } else if (stmt instanceof CreateIndex createIndex) {
+            operator = handleIndex(dbManager, createIndex);
         }
         //todo: add condition of handleDelete
         // functional
@@ -225,5 +229,10 @@ public class LogicalPlanner {
         LogicalOperator root = new LogicalTableScanOperator(deleteStmt.getTable().getName(), dbManager);
         return new LogicalDeleteOperator(root, deleteStmt.getTable().getName(),
                 deleteStmt.getWhere());
+    }
+
+    private static LogicalOperator handleIndex(DBManager dbManager, CreateIndex createIndex) throws DBException {
+        LogicalOperator root = new LogicalTableScanOperator(createIndex.getTable().getName(), dbManager);
+        return new LogicalCreateIndexOperator(root, createIndex, TableMeta.IndexType.InMemoryOrdered);
     }
 }

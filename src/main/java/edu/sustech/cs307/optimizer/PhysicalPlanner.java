@@ -2,6 +2,9 @@ package edu.sustech.cs307.optimizer;
 
 import edu.sustech.cs307.exception.DBException;
 import edu.sustech.cs307.exception.ExceptionTypes;
+import edu.sustech.cs307.index.BPlusTreeIndex;
+import edu.sustech.cs307.index.InMemoryOrderedIndex;
+import edu.sustech.cs307.index.Index;
 import edu.sustech.cs307.logicalOperator.*;
 import edu.sustech.cs307.physicalOperator.*;
 import edu.sustech.cs307.system.DBManager;
@@ -10,17 +13,17 @@ import edu.sustech.cs307.value.ValueType;
 import edu.sustech.cs307.meta.ColumnMeta;
 import edu.sustech.cs307.meta.TableMeta;
 
-import net.sf.jsqlparser.expression.DoubleValue;
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.LongValue;
-import net.sf.jsqlparser.expression.StringValue;
+import net.sf.jsqlparser.expression.*;
+import net.sf.jsqlparser.expression.operators.relational.Between;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.ParenthesedExpressionList;
+import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.Values;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public class PhysicalPlanner {
     public static PhysicalOperator generateOperator(DBManager dbManager, LogicalOperator logicalOp) throws DBException {
@@ -42,6 +45,8 @@ public class PhysicalPlanner {
           return handleAggregate(dbManager, aggregateOperator);
         } else if (logicalOp instanceof LogicalSortOperator sortOperator) {
           return handleSort(dbManager, sortOperator);
+        } else if (logicalOp instanceof LogicalCreateIndexOperator indexOperator) {
+          return handleIndex(dbManager, indexOperator);
         } else {
             throw new DBException(ExceptionTypes.UnsupportedOperator(logicalOp.getClass().getSimpleName()));
         }
@@ -57,19 +62,59 @@ public class PhysicalPlanner {
             return new SeqScanOperator(tableName, dbManager);
         }
 
-        // Check if index exists for the table (for now, assume RBTreeIndex always
-        // exists if index is defined)
-        if (tableMeta.getIndexes() != null && !tableMeta.getIndexes().isEmpty()) {
-            throw new RuntimeException("unimplement");
-        } else {
-            return new SeqScanOperator(tableName, dbManager);
+        return new SeqScanOperator(tableName, dbManager);
+    }
+    private static String whetherIndexScan (DBManager dbManager, LogicalFilterOperator logicalFilterOp) {
+        LogicalTableScanOperator scan = ((LogicalTableScanOperator) logicalFilterOp.getChild());
+        String tableName = scan.getTableName();
+        TableMeta tableMeta;
+        try {
+            tableMeta = dbManager.getMetaManager().getTable(tableName);
+        } catch (DBException e) {
+            return null;
         }
+
+        Map<String, TableMeta.IndexType > indexes = tableMeta.getIndexes();
+        if (indexes.isEmpty()) {
+            return "";
+        }
+        Expression expr = logicalFilterOp.getWhereExpr();
+        String path = "CS307-DB/meta/" + tableName + "_";
+        if (expr instanceof BinaryExpression binaryExpr) {
+            Expression leftExpr = binaryExpr.getLeftExpression();
+            Expression rightExpr = binaryExpr.getRightExpression();
+            if (leftExpr instanceof Column leftColum) {
+                if (indexes.containsKey(leftColum.getColumnName())) {
+                    String type = indexes.get(leftColum.getColumnName()).name();
+                    return path + leftColum.getColumnName() + "_" + type +".json";
+                }
+            } else if (rightExpr instanceof Column rightColumn) {
+                if (indexes.containsKey(rightColumn.getColumnName())) {
+                    String type = indexes.get(rightColumn.getColumnName()).name();
+                    return path + rightColumn.getColumnName() + "_" + type +".json";
+                }
+            }
+        }
+        return "";
     }
 
     private static PhysicalOperator handleFilter(DBManager dbManager, LogicalFilterOperator logicalFilterOp)
             throws DBException {
-        PhysicalOperator inputOp = generateOperator(dbManager, logicalFilterOp.getChild());
-        return new FilterOperator(inputOp, logicalFilterOp.getWhereExpr());
+        LogicalTableScanOperator scan = ((LogicalTableScanOperator) logicalFilterOp.getChild());
+        String tableName = scan.getTableName();
+        String index_name = whetherIndexScan(dbManager, logicalFilterOp);
+        if (index_name.length() > 0) {
+            if (index_name.contains("InMemory")) {
+                InMemoryOrderedIndex index = new InMemoryOrderedIndex(index_name);
+                BinaryExpression expr = (BinaryExpression)logicalFilterOp.getWhereExpr();
+                return new InMemoryIndexScanOperator(index, dbManager, tableName, expr);
+            } else {
+                return new IndexScanOperator();
+            }
+        } else {
+            PhysicalOperator inputOp = generateOperator(dbManager, logicalFilterOp.getChild());
+            return new FilterOperator(inputOp, logicalFilterOp.getWhereExpr());
+        }
     }
 
     private static PhysicalOperator handleJoin(DBManager dbManager, LogicalJoinOperator logicalJoinOp)
@@ -216,5 +261,10 @@ public class PhysicalPlanner {
     private static PhysicalOperator handleSort(DBManager dbManager, LogicalSortOperator sortOperator) throws DBException {
         PhysicalOperator inputOp = generateOperator(dbManager, sortOperator.getChild());
         return new SortOperator(inputOp, sortOperator.getOrderByElements(), sortOperator.getTable());
+    }
+
+    private static PhysicalOperator handleIndex(DBManager dbManager, LogicalCreateIndexOperator indexOperator) throws DBException {
+        PhysicalOperator inputOp = generateOperator(dbManager, indexOperator.getChild());
+        return new CreateIndexOperator(inputOp, indexOperator.getColumn(), indexOperator.getType());
     }
 }

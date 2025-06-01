@@ -2,6 +2,7 @@ package edu.sustech.cs307.physicalOperator;
 
 import edu.sustech.cs307.meta.ColumnMeta;
 
+import edu.sustech.cs307.meta.MetaManager;
 import edu.sustech.cs307.system.DBManager;
 import edu.sustech.cs307.tuple.TableTuple;
 import edu.sustech.cs307.tuple.Tuple;
@@ -133,4 +134,6 @@ public class SeqScanOperator implements PhysicalOperator {
     public RecordFileHandle getFileHandle() {
         return fileHandle;
     }
+    public TableMeta getTableMeta() { return tableMeta; }
+    public MetaManager getMetaManager() { return dbManager.getMetaManager(); }
 }

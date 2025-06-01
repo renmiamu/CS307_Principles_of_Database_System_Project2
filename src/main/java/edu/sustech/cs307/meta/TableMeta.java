@@ -22,7 +22,7 @@ public class TableMeta {
     private Map<String, Integer> column_rank;
 
     public enum IndexType {
-        BTREE
+        BTREE,InMemoryOrdered
     }
 
     public TableMeta(String tableName) {
@@ -100,4 +100,5 @@ public class TableMeta {
     public void setIndexes(Map<String, IndexType> indexes) {
         this.indexes = indexes;
     }
+    public String getTableName() { return tableName; }
 }

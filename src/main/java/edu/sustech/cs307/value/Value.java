@@ -1,17 +1,20 @@
 package edu.sustech.cs307.value;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.sustech.cs307.exception.DBException;
 
 import java.nio.ByteBuffer;
 
-public class Value {
+public class Value implements Comparable<Value> {
     public Object value;
     public ValueType type;
     public static final int INT_SIZE = 8;
     public static final int FLOAT_SIZE = 8;
     public static final int CHAR_SIZE = 64;
-
-    public Value(Object value, ValueType type) {
+    @JsonCreator
+    public Value(@JsonProperty("value")Object value,
+                 @JsonProperty("type")ValueType type) {
         this.value = value;
         this.type = type;
     }
@@ -128,5 +131,36 @@ public class Value {
         } catch (DBException e) {
             throw new RuntimeException(e);
         }
+    }
+    @Override
+    public int compareTo(Value o) {
+        try {
+            Value v1 = formatValue(this);
+            Value v2 = formatValue(o);
+            return ValueComparer.compare(v1, v2);
+        } catch (DBException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static Value formatValue(Value o) {
+        String s = o.value.toString();
+        if (s.contains("_")) {
+            String type = s.substring(0, s.indexOf('_'));
+            String val = s.substring(s.indexOf('_') + 1);
+            switch (type) {
+                case "int" :
+                    o = new Value(Long.parseLong(val), ValueType.INTEGER);
+                    break;
+
+                case "char" :
+                    o = new Value(val, ValueType.CHAR);
+                    break;
+
+                case "float" :
+                    o = new Value(Double.parseDouble(val), ValueType.FLOAT);
+                    break;
+            }
+        }
+        return o;
     }
 }
