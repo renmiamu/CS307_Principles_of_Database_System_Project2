@@ -74,7 +74,11 @@ public class CreateIndexOperator implements PhysicalOperator {
             TableTuple tuple = (TableTuple) seqScanOperator.Current();
 
             Value v = tuple.getValue(new TabCol(tuple.getTableName(), column));
+            if (map.containsKey(v)) {
+                throw new DBException(ExceptionTypes.DuplicatedIndex(v.toString()));
+            }
             RID rid = tuple.getRID();
+            if (rid.pageNum < 0 || rid.slotNum < 0 ) System.out.println(rid.slotNum);
 
             map.put(v, rid);
         }

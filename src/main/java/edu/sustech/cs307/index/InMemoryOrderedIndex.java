@@ -49,16 +49,14 @@ public class InMemoryOrderedIndex implements Index {
 
     @Override
     public RID EqualTo(Value value) {
-        // or throw an exception if preferred
         if (value.type == ValueType.CHAR){
             for (Entry<Value, RID> entry : indexMap.entrySet()) {
                 String key = entry.getKey().toString();
                 String target = (String)value.value;
                 if (key.equals(target)) return entry.getValue();
             }
-
-        }
-        return indexMap.getOrDefault(value, null);
+            return null;
+        } else return indexMap.getOrDefault(value, null);
     }
 
     /**

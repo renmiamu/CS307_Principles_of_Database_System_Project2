@@ -104,6 +104,7 @@ public class DBEntry {
                     }
                     physicalOperator.Close();
                     dbManager.getBufferPool().FlushAllPages("");
+                    dbManager.closeDBManager();
                 } catch (DBException e) {
                     Logger.error(e.getMessage());
                     Logger.error("An error occurred. Please try again.");

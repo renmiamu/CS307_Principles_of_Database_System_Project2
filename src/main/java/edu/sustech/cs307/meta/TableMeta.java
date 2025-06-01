@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TableMeta {
@@ -101,4 +102,11 @@ public class TableMeta {
         this.indexes = indexes;
     }
     public String getTableName() { return tableName; }
+    public List<String> getIndexesList() {
+        List<String> result = new ArrayList<>();
+        for (Map.Entry<String, IndexType> e : indexes.entrySet()) {
+            result.add(e.getKey());
+        }
+        return result;
+    }
 }

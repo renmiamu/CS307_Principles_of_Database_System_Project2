@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Set;
 
 public class DBManager {
@@ -150,10 +151,14 @@ public class DBManager {
 //        if (!isDirExists(table_name)) throw new DBException(ExceptionTypes.BadIOError("" +
 //                "Does not exists table " + table_name));
         // todo: finish drop table method
-        metaManager.dropTable(table_name);
         String table_folder = String.format("%s/%s", diskManager.getCurrentDir(), table_name);
         File file_folder = new File(table_folder);
         deleteDirectory(file_folder);
+        TableMeta meta = metaManager.getTable(table_name);
+        for (String s : meta.getIndexesList()){
+            dropIndex(table_name, s);
+        }
+        metaManager.dropTable(table_name);
     }
 
     /**
@@ -198,7 +203,7 @@ public class DBManager {
      * @throws DBException if an error occurs during the closing process
      */
     public void closeDBManager() throws DBException {
-        this.bufferPool.FlushAllPages(null);
+        this.bufferPool.FlushAllPages("");
         DiskManager.dump_disk_manager_meta(this.diskManager);
         this.metaManager.saveToJson();
     }

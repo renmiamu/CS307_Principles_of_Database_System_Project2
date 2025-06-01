@@ -24,10 +24,17 @@ public enum ExceptionTypes {
     NOT_SUPPORTED_OPERATION,
     NON_GROUPED_COLUMN,
     GET_VALUE_FROM_INVALID_TUPLE,
-    UNSUPPORTED_FUNCTION
+    UNSUPPORTED_FUNCTION,
+    DUPLICATED_INDEX
     ;
 
     private String error_result;
+    public static ExceptionTypes DuplicatedIndex(String string) {
+        GET_VALUE_FROM_INVALID_TUPLE.SetErrorResult(
+                String.format("Duplicate index occured: %s", string)
+        );
+        return GET_VALUE_FROM_INVALID_TUPLE;
+    }
 
     public static ExceptionTypes InvalidTuple(String string) {
         GET_VALUE_FROM_INVALID_TUPLE.SetErrorResult(

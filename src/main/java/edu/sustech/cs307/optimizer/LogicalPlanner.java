@@ -117,7 +117,6 @@ public class LogicalPlanner {
             if (plainSelect.getWhere() != null) {
                 root = new LogicalFilterOperator(root, plainSelect.getWhere());
             }
-            root = new LogicalProjectOperator(root, plainSelect.getSelectItems());
         } else {
             // 聚合查询：处理 GROUP BY 和聚合函数
             // 1. 提取 GROUP BY 表达式（如 t.age）
@@ -233,6 +232,6 @@ public class LogicalPlanner {
 
     private static LogicalOperator handleIndex(DBManager dbManager, CreateIndex createIndex) throws DBException {
         LogicalOperator root = new LogicalTableScanOperator(createIndex.getTable().getName(), dbManager);
-        return new LogicalCreateIndexOperator(root, createIndex, TableMeta.IndexType.InMemoryOrdered);
+        return new LogicalCreateIndexOperator(root, createIndex, TableMeta.IndexType.BTREE);
     }
 }

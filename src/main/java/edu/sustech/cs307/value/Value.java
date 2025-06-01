@@ -103,6 +103,7 @@ public class Value implements Comparable<Value> {
                 byte[] bytes = ((String) this.value).getBytes();
                 ByteBuffer buffer3 = ByteBuffer.wrap(bytes);
                 var length = buffer3.getInt();
+                if (length >= 64) return (String) this.value;
                 // int is 4 byte
                 return new String(bytes, 4, length);
             }

@@ -14,6 +14,7 @@ import edu.sustech.cs307.record.BitMap;
 import edu.sustech.cs307.record.Record;
 import edu.sustech.cs307.record.RecordFileHandle;
 
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 
 public class SeqScanOperator implements PhysicalOperator {
@@ -86,6 +87,7 @@ public class SeqScanOperator implements PhysicalOperator {
             return;
         try {
             if (hasNext()) { // Advance to the next record
+                int pageToUnpin = currentPageNum;
                 RID rid = new RID(currentPageNum, currentSlotNum);
                 currentRecord = fileHandle.GetRecord(rid);
                 currentSlotNum++;
@@ -94,7 +96,7 @@ public class SeqScanOperator implements PhysicalOperator {
                     currentSlotNum = 0;
                 }
                 // readonly
-                fileHandle.UnpinPageHandle(currentPageNum, false);
+                fileHandle.UnpinPageHandle(pageToUnpin, false);
             } else {
                 currentRecord = null;
             }
@@ -109,7 +111,13 @@ public class SeqScanOperator implements PhysicalOperator {
         if (!isOpen || currentRecord == null) {
             return null;
         }
-        return new TableTuple(tableName, tableMeta, currentRecord, new RID(this.currentPageNum, this.currentSlotNum - 1));
+        int pageNum = currentPageNum;
+        int slotNum = currentSlotNum - 1;
+        if (slotNum < 0) {
+            slotNum = 45;
+            pageNum --;
+        }
+        return new TableTuple(tableName, tableMeta, currentRecord, new RID(pageNum, slotNum));
     }
 
     @Override

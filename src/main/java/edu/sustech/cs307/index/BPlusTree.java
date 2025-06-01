@@ -1,12 +1,6 @@
 package edu.sustech.cs307.index;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 public class BPlusTree<K extends Comparable<? super K>, V> {
 
@@ -78,8 +72,8 @@ public class BPlusTree<K extends Comparable<? super K>, V> {
      * @return the values associated with the keys specified by the range:
      *         {@code key1} and {@code key2}
      */
-    public List<V> searchRange(K key1, RangePolicy policy1, K key2,
-                               RangePolicy policy2) {
+    public List<Map.Entry<K,V>> searchRange(K key1, RangePolicy policy1, K key2,
+                                            RangePolicy policy2) {
         return root.getRange(key1, policy1, key2, policy2);
     }
 
@@ -152,7 +146,7 @@ public class BPlusTree<K extends Comparable<? super K>, V> {
 
         abstract K getFirstLeafKey();
 
-        abstract List<V> getRange(K key1, RangePolicy policy1, K key2,
+        abstract List<Map.Entry<K,V>> getRange(K key1, RangePolicy policy1, K key2,
                                   RangePolicy policy2);
 
         abstract void merge(Node sibling);
@@ -226,7 +220,7 @@ public class BPlusTree<K extends Comparable<? super K>, V> {
         }
 
         @Override
-        List<V> getRange(K key1, RangePolicy policy1, K key2,
+        List<Map.Entry<K,V>> getRange(K key1, RangePolicy policy1, K key2,
                          RangePolicy policy2) {
             return getChild(key1).getRange(key1, policy1, key2, policy2);
         }
@@ -358,9 +352,9 @@ public class BPlusTree<K extends Comparable<? super K>, V> {
         }
 
         @Override
-        List<V> getRange(K key1, RangePolicy policy1, K key2,
+        List<Map.Entry<K,V>> getRange(K key1, RangePolicy policy1, K key2,
                          RangePolicy policy2) {
-            List<V> result = new LinkedList<V>();
+            List<Map.Entry<K,V>> result = new LinkedList<Map.Entry<K,V>>();
             LeafNode node = this;
             while (node != null) {
                 Iterator<K> kIt = node.keys.iterator();
@@ -372,7 +366,7 @@ public class BPlusTree<K extends Comparable<? super K>, V> {
                     int cmp2 = key.compareTo(key2);
                     if (((policy1 == RangePolicy.EXCLUSIVE && cmp1 > 0) || (policy1 == RangePolicy.INCLUSIVE && cmp1 >= 0))
                             && ((policy2 == RangePolicy.EXCLUSIVE && cmp2 < 0) || (policy2 == RangePolicy.INCLUSIVE && cmp2 <= 0)))
-                        result.add(value);
+                        result.add(Map.entry(key, value));
                     else if ((policy2 == RangePolicy.EXCLUSIVE && cmp2 >= 0)
                             || (policy2 == RangePolicy.INCLUSIVE && cmp2 > 0))
                         return result;

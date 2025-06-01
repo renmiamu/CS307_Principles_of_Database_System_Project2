@@ -104,12 +104,13 @@ public class PhysicalPlanner {
         String tableName = scan.getTableName();
         String index_name = whetherIndexScan(dbManager, logicalFilterOp);
         if (index_name.length() > 0) {
+            BinaryExpression expr = (BinaryExpression)logicalFilterOp.getWhereExpr();
             if (index_name.contains("InMemory")) {
                 InMemoryOrderedIndex index = new InMemoryOrderedIndex(index_name);
-                BinaryExpression expr = (BinaryExpression)logicalFilterOp.getWhereExpr();
                 return new InMemoryIndexScanOperator(index, dbManager, tableName, expr);
             } else {
-                return new IndexScanOperator();
+                BPlusTreeIndex index = new BPlusTreeIndex(index_name);
+                return new IndexScanOperator(index, dbManager, tableName, expr);
             }
         } else {
             PhysicalOperator inputOp = generateOperator(dbManager, logicalFilterOp.getChild());
