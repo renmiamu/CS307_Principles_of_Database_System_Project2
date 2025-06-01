@@ -8,11 +8,13 @@ import edu.sustech.cs307.meta.TableMeta;
 import edu.sustech.cs307.storage.BufferPool;
 import edu.sustech.cs307.storage.DiskManager;
 import edu.sustech.cs307.value.ValueType;
+import net.sf.jsqlparser.schema.Table;
 import org.apache.commons.lang3.StringUtils;
 import org.pmw.tinylog.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -199,5 +201,22 @@ public class DBManager {
         this.bufferPool.FlushAllPages(null);
         DiskManager.dump_disk_manager_meta(this.diskManager);
         this.metaManager.saveToJson();
+    }
+    public void dropIndex(String tableName, String indexName) throws DBException {
+        TableMeta tableMeta = metaManager.getTable(tableName);
+        tableMeta.getIndexes().remove(indexName);
+        metaManager.saveToJson();
+        String path1 = "CS307-DB/meta/" + tableName + "_" + indexName + "_" +
+                "InMemoryOrdered" + ".json";
+        String path2 = "CS307-DB/meta/" + tableName + "_" + indexName + "_" +
+                "BTREE" + ".json";
+        try{
+            File file1 = new File(path1);
+            File file2 = new File(path2);
+            file1.delete();
+            file2.delete();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

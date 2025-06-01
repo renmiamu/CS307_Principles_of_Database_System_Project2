@@ -17,7 +17,14 @@ public class DropExecutor implements DMLExecutor{
     @Override
     public void execute() throws DBException {
         String table_name = drop.getName().getName();
-        dbManager.dropTable(table_name);
-        Logger.info("Successfully dropped table: {}", table_name);
+        if (drop.getType().toLowerCase().equals("index")) {
+            String indexName = table_name;
+            table_name = drop.getParameters().get(1);
+            dbManager.dropIndex(table_name, indexName);
+            Logger.info("Successfully dropped index: {}", indexName);
+        } else {
+            dbManager.dropTable(table_name);
+            Logger.info("Successfully dropped table: {}", table_name);
+        }
     }
 }

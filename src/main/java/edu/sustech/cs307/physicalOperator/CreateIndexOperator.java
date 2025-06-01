@@ -109,7 +109,7 @@ public class CreateIndexOperator implements PhysicalOperator {
     @Override
     public ArrayList<ColumnMeta> outputSchema() {
         ArrayList<ColumnMeta> schema = new ArrayList<>();
-        schema.add(new ColumnMeta("Create Index", "done", ValueType.INTEGER, 0, 0));
+        schema.add(new ColumnMeta("Index Created", "", ValueType.INTEGER, 0, 0));
         return schema;
     }
 }
