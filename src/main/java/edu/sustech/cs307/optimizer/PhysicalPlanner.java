@@ -95,9 +95,11 @@ public class PhysicalPlanner {
                 }
             }
         } else if (expr instanceof Between between) {
-            String column = between.getLeftExpression().toString();
-            String type = indexes.get(column).name();
-            return path + column + "_" + type + ".json";
+            if (indexes.containsKey(between.getLeftExpression().toString())){
+                String column = between.getLeftExpression().toString();
+                String type = indexes.get(column).name();
+                return path + column + "_" + type + ".json";
+            }
         }
         return "";
     }
