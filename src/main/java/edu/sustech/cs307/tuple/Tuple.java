@@ -9,6 +9,7 @@ import edu.sustech.cs307.value.ValueType;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
+import net.sf.jsqlparser.expression.operators.relational.Between;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.expression.operators.relational.ParenthesedExpressionList;
 import net.sf.jsqlparser.schema.Column;
@@ -42,10 +43,49 @@ public abstract class Tuple {
             return evaluateBinaryExpression(tuple, binaryExpression);
         } else if (whereExpr instanceof InExpression inExpression) {
             return evaluateInExpression(tuple, inExpression);
+        } else if (whereExpr instanceof Between between) {
+            return evaluateBetween(tuple, between);
         } else {
             return true; // For non-binary and non-AND expressions, just return true for now
         }
     }
+
+    private boolean evaluateBetween(Tuple tuple, Between between) throws DBException {
+        Expression leftExpr = between.getLeftExpression();
+        Expression start = between.getBetweenExpressionStart();
+        Expression end = between.getBetweenExpressionEnd();
+        String columnName = leftExpr.toString();
+        TabCol[] tabCols = tuple.getTupleSchema();
+        Value val = null;
+        for (int i = 0; i < tabCols.length; i++) {
+            String colName = tabCols[i].getColumnName().toLowerCase();
+            if (leftExpr.toString().toLowerCase().equals(colName)) {
+                val = tuple.getValue(tabCols[i]);
+            }
+        }
+        ValueType type = val.getType();
+        Value left = null;
+        Value right = null;
+        switch (type) {
+            case INTEGER :
+                left = new Value(Long.parseLong(start.toString()));
+                right = new Value(Long.parseLong(end.toString()));
+                break;
+
+            case FLOAT :
+                left = new Value(Double.parseDouble(start.toString()));
+                right = new Value(Double.parseDouble(end.toString()));
+                break;
+
+            case CHAR :
+                return false;
+        }
+        //左闭右开
+        if (ValueComparer.compare(val,left) >= 0 &&
+                ValueComparer.compare(right, val) > 0) return true;
+        return false;
+    }
+
     private boolean evaluateInExpression(Tuple tuple, InExpression inExpression) throws DBException {
         boolean contains = false;
         Expression leftExpr = inExpression.getLeftExpression();

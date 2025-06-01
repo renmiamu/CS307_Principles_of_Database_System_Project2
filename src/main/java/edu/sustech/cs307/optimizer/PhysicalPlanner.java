@@ -86,14 +86,18 @@ public class PhysicalPlanner {
             if (leftExpr instanceof Column leftColum) {
                 if (indexes.containsKey(leftColum.getColumnName())) {
                     String type = indexes.get(leftColum.getColumnName()).name();
-                    return path + leftColum.getColumnName() + "_" + type +".json";
+                    return path + leftColum.getColumnName() + "_" + type + ".json";
                 }
             } else if (rightExpr instanceof Column rightColumn) {
                 if (indexes.containsKey(rightColumn.getColumnName())) {
                     String type = indexes.get(rightColumn.getColumnName()).name();
-                    return path + rightColumn.getColumnName() + "_" + type +".json";
+                    return path + rightColumn.getColumnName() + "_" + type + ".json";
                 }
             }
+        } else if (expr instanceof Between between) {
+            String column = between.getLeftExpression().toString();
+            String type = indexes.get(column).name();
+            return path + column + "_" + type + ".json";
         }
         return "";
     }
@@ -104,18 +108,28 @@ public class PhysicalPlanner {
         String tableName = scan.getTableName();
         String index_name = whetherIndexScan(dbManager, logicalFilterOp);
         if (index_name.length() > 0) {
-            BinaryExpression expr = (BinaryExpression)logicalFilterOp.getWhereExpr();
-            if (index_name.contains("InMemory")) {
-                InMemoryOrderedIndex index = new InMemoryOrderedIndex(index_name);
-                return new InMemoryIndexScanOperator(index, dbManager, tableName, expr);
-            } else {
-                BPlusTreeIndex index = new BPlusTreeIndex(index_name);
-                return new IndexScanOperator(index, dbManager, tableName, expr);
+            Expression expression = logicalFilterOp.getWhereExpr();
+            if (expression instanceof BinaryExpression expr) {
+                if (index_name.contains("InMemory")) {
+                    InMemoryOrderedIndex index = new InMemoryOrderedIndex(index_name);
+                    return new InMemoryIndexScanOperator(index, dbManager, tableName, expr);
+                } else {
+                    BPlusTreeIndex index = new BPlusTreeIndex(index_name);
+                    return new IndexScanOperator(index, dbManager, tableName, expr);
+                }
+            } else if (expression instanceof Between between) {
+                if (index_name.contains("InMemory")) {
+                    InMemoryOrderedIndex index = new InMemoryOrderedIndex(index_name);
+                    return new InMemoryIndexScanOperator(index, dbManager, tableName, between);
+                } else {
+                    BPlusTreeIndex index = new BPlusTreeIndex(index_name);
+                    return new IndexScanOperator(index, dbManager, tableName, between);
+                }
             }
-        } else {
-            PhysicalOperator inputOp = generateOperator(dbManager, logicalFilterOp.getChild());
-            return new FilterOperator(inputOp, logicalFilterOp.getWhereExpr());
+
         }
+        PhysicalOperator inputOp = generateOperator(dbManager, logicalFilterOp.getChild());
+        return new FilterOperator(inputOp, logicalFilterOp.getWhereExpr());
     }
 
     private static PhysicalOperator handleJoin(DBManager dbManager, LogicalJoinOperator logicalJoinOp)

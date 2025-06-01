@@ -54,7 +54,6 @@ public class BPlusTreeIndex implements Index {
         this(persistPath, 128);
     }
 
-    /* -------------------------------------------------- Index 接口实现 -------------------------------------------------- */
 
     @Override
     public RID EqualTo(Value value) {

@@ -15,6 +15,7 @@ import edu.sustech.cs307.value.Value;
 import edu.sustech.cs307.value.ValueComparer;
 import edu.sustech.cs307.value.ValueType;
 import net.sf.jsqlparser.expression.*;
+import net.sf.jsqlparser.expression.operators.relational.Between;
 import net.sf.jsqlparser.schema.Column;
 
 import java.util.ArrayList;
@@ -33,10 +34,11 @@ public class InMemoryIndexScanOperator implements PhysicalOperator {
 
     //这里目前只处理binary expression
     private final BinaryExpression expr;
+    private final Between between;
     private final String operator;
     Iterator<Map.Entry<Value, RID>> iter;
     public InMemoryIndexScanOperator(InMemoryOrderedIndex index, DBManager dbManager,
-                                     String tableName, BinaryExpression expr) {
+                                     String tableName, Expression expr) {
         this.dbManager = dbManager;
         this.index = index;
         this.tableName = tableName;
@@ -46,8 +48,15 @@ public class InMemoryIndexScanOperator implements PhysicalOperator {
             // Handle exception properly, maybe log or rethrow
             e.printStackTrace();
         }
-        this.expr = expr;
-        this.operator = expr.getStringExpression();
+        if (expr instanceof BinaryExpression binaryExpression) {
+            this.expr = binaryExpression;
+            this.between = null;
+            this.operator = binaryExpression.getStringExpression();
+        } else {
+            this.expr = null;
+            this.between = (Between)expr;
+            this.operator = null;
+        }
     }
 
     @Override
@@ -57,22 +66,29 @@ public class InMemoryIndexScanOperator implements PhysicalOperator {
 
     @Override
     public void Begin() throws DBException {
-        Value value = getValue(expr);
-        switch (operator) {
-            case "=" :
-                RID rid = index.EqualTo(value);
-                if (rid != null)
-                    iter = List.of(Map.entry(value, rid)).iterator();
-                break;
+        if (expr != null) {
+            Value value = getValue(expr);
+            switch (operator) {
+                case "=" :
+                    RID rid = index.EqualTo(value);
+                    if (rid != null)
+                        iter = List.of(Map.entry(value, rid)).iterator();
+                    break;
 
-            case ">" :
-                iter = index.MoreThan(value, false);
-                break;
+                case ">" :
+                    iter = index.MoreThan(value, false);
+                    break;
 
-            case "<" :
-                iter = index.LessThan(value, false);
-                break;
+                case "<" :
+                    iter = index.LessThan(value, false);
+                    break;
+            }
+        } else {
+            Value left = getConstantValue(between.getBetweenExpressionStart());
+            Value right = getConstantValue(between.getBetweenExpressionEnd());
+            iter = index.Range(left, right, true, false);
         }
+
         fileHandle = dbManager.getRecordManager().OpenFile(tableName);
     }
     private Value getValue(BinaryExpression binaryExpr) {
