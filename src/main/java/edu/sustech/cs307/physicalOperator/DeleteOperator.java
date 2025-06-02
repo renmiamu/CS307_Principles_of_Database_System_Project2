@@ -4,6 +4,7 @@ import edu.sustech.cs307.exception.DBException;
 import edu.sustech.cs307.exception.ExceptionTypes;
 import edu.sustech.cs307.meta.ColumnMeta;
 import edu.sustech.cs307.meta.TabCol;
+import edu.sustech.cs307.record.RID;
 import edu.sustech.cs307.record.RecordFileHandle;
 import edu.sustech.cs307.tuple.TableTuple;
 import edu.sustech.cs307.tuple.TempTuple;
@@ -52,7 +53,8 @@ public class DeleteOperator implements PhysicalOperator {
             TableTuple tuple = (TableTuple) seqScanOperator.Current();
 
             if (whereExpr == null || tuple.eval_expr(whereExpr)) {
-                fileHandle.DeleteRecord(tuple.getRID());
+                RID rid = tuple.getRID();
+                fileHandle.DeleteRecord(rid);
                 deleteCount ++;
             }
         }

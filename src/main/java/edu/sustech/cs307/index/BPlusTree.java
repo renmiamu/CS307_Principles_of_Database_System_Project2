@@ -1,5 +1,8 @@
 package edu.sustech.cs307.index;
 
+import edu.sustech.cs307.record.RID;
+import edu.sustech.cs307.value.Value;
+
 import java.util.*;
 
 public class BPlusTree<K extends Comparable<? super K>, V> {
@@ -410,4 +413,24 @@ public class BPlusTree<K extends Comparable<? super K>, V> {
             return values.size() < branchingFactor / 2;
         }
     }
+    public Map<K, V> toMap() {
+        Map<K, V> map = new TreeMap<>();
+        // 从 root 开始找到最左侧的 LeafNode
+        Node current = root;
+        while (current instanceof InternalNode) {
+            current = ((InternalNode) current).children.get(0);
+        }
+
+        LeafNode leaf = (LeafNode) current;
+
+        while (leaf != null) {
+            for (int i = 0; i < leaf.keys.size(); i++) {
+                map.put(leaf.keys.get(i), leaf.values.get(i));
+            }
+            leaf = leaf.next;
+        }
+
+        return map;
+    }
+
 }

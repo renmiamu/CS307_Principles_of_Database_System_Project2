@@ -1,9 +1,9 @@
 package edu.sustech.cs307.physicalOperator;
 
 import edu.sustech.cs307.exception.DBException;
+import edu.sustech.cs307.index.BPlusTreeIndex;
 import edu.sustech.cs307.meta.ColumnMeta;
 import edu.sustech.cs307.system.DBManager;
-import edu.sustech.cs307.tuple.TableTuple;
 import edu.sustech.cs307.tuple.TempTuple;
 import edu.sustech.cs307.tuple.Tuple;
 import edu.sustech.cs307.value.Value;

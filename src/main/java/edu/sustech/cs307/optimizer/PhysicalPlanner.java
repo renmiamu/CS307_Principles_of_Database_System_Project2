@@ -222,7 +222,6 @@ public class PhysicalPlanner {
         parseValue(values, valuesList, tableMeta);
         // will always be same size tuple
 
-        // check the
 
         return new InsertOperator(logicalInsertOp.tableName, columns,
                 values, dbManager);

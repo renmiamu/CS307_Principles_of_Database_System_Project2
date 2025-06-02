@@ -41,7 +41,7 @@ public class BPlusTreeIndex implements Index {
                     };
                     TreeMap<Value, RID> map = objectMapper.readValue(file, typeRef);
                     map.forEach(this::insert);
-                    System.out.println(tree.toString());
+                    //System.out.println(tree.toString());
                 }
             } catch (IOException e) {
                 Logger.error("[BPlusTreeIndex] restore failed: " + e.getMessage());
@@ -97,7 +97,6 @@ public class BPlusTreeIndex implements Index {
 
         }
         try (FileWriter writer = new FileWriter(persistPath)) {
-            TreeMap<String, RID> stringKeyMap = new TreeMap<>();
             for (Map.Entry<Value, RID> entry : map.entrySet()) {
                 String key = entry.getKey().type + "_";
                 if (entry.getKey().type == ValueType.CHAR) {
@@ -105,23 +104,31 @@ public class BPlusTreeIndex implements Index {
                     if (val.contains("\b")) val = val.substring(val.indexOf("\b") + 1);
                     key += val.trim();
                 } else key += entry.getKey().value.toString();
-                stringKeyMap.put(key, entry.getValue());
+                tree.insert(new Value(key), entry.getValue());
             }
-            objectMapper.writeValue(writer, stringKeyMap);
+            objectMapper.writeValue(writer, tree.toMap());
         } catch (IOException e) {
             Logger.error("Error saving index data: " + e.getMessage());
         }
     }
 
-    /* -------------------------------------------------- 额外操作 -------------------------------------------------- */
-
     /** 插入新键 —— 供上层 InsertOperator 调用 */
     public void insert(Value key, RID rid) {
         tree.insert(key, rid);
+        try (FileWriter writer = new FileWriter(persistPath)) {
+            objectMapper.writeValue(writer, tree.toMap());
+        } catch (IOException e) {
+            Logger.error("Error saving index data: " + e.getMessage());
+        }
     }
 
     /** 删除键 —— 供 Delete/Update 调用 */
     public void delete(Value key) {
         tree.delete(key);
+        try (FileWriter writer = new FileWriter(persistPath)) {
+            objectMapper.writeValue(writer, tree.toMap());
+        } catch (IOException e) {
+            Logger.error("Error saving index data: " + e.getMessage());
+        }
     }
 }
